@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snag — Price Tracker</title>
+<style>
+:root{
+  --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#8e8e93;
+  --green:#34c759; --red:#ff3b30; --blue:#007aff; --amber:#ff9500;
+  --seg:#e9e9ee; --press:#d1d1d6;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+  background:var(--bg); color:var(--ink); padding:0 0 40px;}
+header{padding:28px 20px 8px; display:flex; align-items:center; justify-content:space-between;}
+header h1{margin:0; font-size:34px; font-weight:800; letter-spacing:-.5px;}
+header p{margin:4px 0 0; color:var(--sub); font-size:14px;}
+main{padding:8px 16px;}
+.card{background:var(--card); border-radius:20px; padding:16px 18px; margin:12px 0;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.card.tappable{cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
+.card.tappable:active{transform:scale(.985); opacity:.85;}
+.item-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+.item-name{font-size:17px; font-weight:700;}
+.item-store{font-size:13px; color:var(--sub); margin-top:2px;}
+.final-price{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.final-price .cur{font-size:15px; font-weight:600; color:var(--sub);}
+.badges{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+.badge{font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px;}
+.badge.low{background:#e5f9ec; color:#1a7f37;}
+.badge.target{background:#e8f0fe; color:#1a56db;}
+.badge.drop{background:#fdecea; color:#c62828;}
+.badge.watch{background:var(--seg); color:var(--sub);}
+.trend{font-size:13px; color:var(--sub); margin-top:8px; font-variant-numeric:tabular-nums;}
+.trend .down{color:var(--green); font-weight:700;}
+.trend .up{color:var(--red); font-weight:700;}
+.detail{margin-top:12px; border-top:1px solid #f0f0f4; padding-top:10px; display:none;}
+.detail.open{display:block;}
+.prow{display:flex; justify-content:space-between; font-size:14px; padding:3px 0; font-variant-numeric:tabular-nums;}
+.prow .k{color:var(--sub);}
+.prow .v{font-weight:600;}
+.prow.total{border-top:1px solid #f0f0f4; margin-top:6px; padding-top:8px; font-size:15px;}
+.prow.total .v{font-weight:800;}
+.prow .neg{color:var(--green);}
+.hist{margin-top:10px;}
+.hist-title{font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;}
+.hbar{display:flex; align-items:flex-end; gap:3px; height:56px; margin-top:4px;}
+.hcol{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+.hfill{width:100%; max-width:22px; background:var(--blue); border-radius:4px 4px 0 0; opacity:.85;}
+.hfill.min{background:var(--green);}
+.hdate{font-size:9px; color:var(--sub); margin-top:2px;}
+.hval{font-size:9px; color:var(--sub); font-variant-numeric:tabular-nums;}
+.item-link{display:inline-block; margin-top:10px; font-size:14px; color:var(--blue); text-decoration:none; font-weight:600;}
+.empty{text-align:center; color:var(--sub); padding:40px 20px; font-size:15px; line-height:1.6;}
+.empty b{color:var(--ink);}
+.foot{margin-top:16px; text-align:center; font-size:12px; color:var(--sub);}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Snag</h1><p>Final prices, tracked daily</p></div>
+</header>
+<main id="list"></main>
+<div class="foot" id="foot"></div>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>"$"+n.toFixed(2);
+let DATA={items:[],taxRate:0.08875,taxLabel:"NYC 8.875%",updated:""};
+
+/* ---------- final price: merge everything into one number ---------- */
+function finalPrice(it, base){
+  const br=[]; // breakdown rows [label, amount]
+  let p=base;
+  br.push(["Price",p]);
+  if(it.promo&&it.promo.value>0){
+    if(it.promo.type==="percent"){ const d=p*it.promo.value/100; p-=d; br.push(["Promo "+it.promo.code+" (−"+it.promo.value+"%)",-d]); }
+    else { p-=it.promo.value; br.push(["Promo "+it.promo.code,-it.promo.value]); }
+  }
+  const ship=it.shipping||0;
+  if(ship>0){ p+=ship; br.push(["Shipping",ship]); }
+  if(it.international){
+    if(p>800&&(it.dutyRate||0)>0){ const d=p*it.dutyRate; p+=d; br.push(["Duty ("+Math.round(it.dutyRate*100)+"%)",d]); }
+  }else{
+    const t=p*DATA.taxRate; p+=t; br.push(["Tax ("+DATA.taxLabel+")",t]);
+  }
+  if(it.cardOffer&&it.cardOffer.credit>0&&p>=(it.cardOffer.minSpend||0)){
+    p-=it.cardOffer.credit; br.push(["Card offer: "+it.cardOffer.label,-it.cardOffer.credit]);
+  }
+  p=Math.max(0,Math.round(p*100)/100);
+  return {total:p, rows:br};
+}
+function histFinal(it){
+  return (it.history||[]).map(h=>({d:h.d, price:h.price, final:finalPrice(it,h.price).total}));
+}
+function render(){
+  const box=$("list"); box.innerHTML="";
+  const items=DATA.items||[];
+  if(!items.length){
+    box.innerHTML='<div class="card"><div class="empty"><b>No items tracked yet.</b><br>Send me a product link and I\'ll add it here.</div></div>';
+  }
+  for(const it of items){
+    const hist=histFinal(it);
+    const cur=hist.length?hist[hist.length-1]:null;
+    const curFinal=cur?cur.final:null;
+    const finals=hist.map(h=>h.final);
+    const low=finals.length?Math.min(...finals):null;
+    const isLow=curFinal!=null&&low!=null&&curFinal<=low+0.005&&finals.length>=2;
+    const targetHit=it.targetFinal!=null&&curFinal!=null&&curFinal<=it.targetFinal+0.005;
+    let drop=null;
+    if(hist.length>=2){
+      const prev=hist[hist.length-2].final;
+      drop=curFinal-prev;
+    }
+    const card=document.createElement("div");
+    card.className="card tappable";
+    let badges="";
+    if(targetHit) badges+='<span class="badge target">▼ Target hit</span>';
+    if(isLow) badges+='<span class="badge low">★ Historic low</span>';
+    if(!targetHit&&!isLow) badges+='<span class="badge watch">Watching</span>';
+    if(drop!=null&&drop<-0.005) badges+='<span class="badge drop">−'+money(-drop)+' today</span>';
+    let trend="";
+    if(hist.length>=2){
+      const first=hist[0].final;
+      const chg=curFinal-first, pct=first?chg/first*100:0;
+      const cls=chg<-0.005?"down":chg>0.005?"up":"";
+      trend='<div class="trend">Since tracking: <span class="'+cls+'">'+(chg<=0?"−":"+")+money(Math.abs(chg))+" ("+(chg<=0?"−":"+")+Math.abs(pct).toFixed(1)+"%)</span></div>";
+    }else if(hist.length===1){
+      trend='<div class="trend">First check — history builds daily.</div>';
+    }
+    card.innerHTML=
+      '<div class="item-head"><div><div class="item-name">'+esc(it.name)+'</div>'+
+      '<div class="item-store">'+esc(it.store||"")+(it.international?" · ships from abroad":"")+'</div></div>'+
+      '<div class="final-price">'+(curFinal!=null?'<span class="cur">$</span>'+curFinal.toFixed(2):"—")+'</div></div>'+
+      '<div class="badges">'+badges+'</div>'+trend+
+      '<div class="detail" id="d-'+it.id+'"></div>'+
+      (it.url?'<a class="item-link" href="'+esc(it.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View product →</a>':"");
+    card.onclick=()=>toggleDetail(it,cur);
+    box.appendChild(card);
+  }
+  $("foot").textContent=DATA.updated?("Prices checked "+DATA.updated):"";
+}
+function toggleDetail(it,cur){
+  const d=$("d-"+it.id);
+  const open=d.classList.toggle("open");
+  if(!open||!cur) return;
+  const fp=finalPrice(it,cur.price);
+  let rows=fp.rows.map(r=>'<div class="prow"><span class="k">'+esc(r[0])+'</span><span class="v'+(r[1]<0?" neg":"")+'">'+(r[1]<0?"−":"")+money(Math.abs(r[1]))+'</span></div>').join("");
+  rows+='<div class="prow total"><span class="k">Final price</span><span class="v">'+money(fp.total)+'</span></div>';
+  let hist="";
+  const h=histFinal(it);
+  if(h.length){
+    const mx=Math.max(...h.map(x=>x.final)), mn=Math.min(...h.map(x=>x.final));
+    const span=(mx-mn)||1;
+    hist='<div class="hist"><div class="hist-title">Price history</div><div class="hbar">'+
+      h.slice(-14).map(x=>{
+        const ht=18+Math.round((x.final-mn)/span*34);
+        return '<div class="hcol"><div class="hval">'+x.final.toFixed(0)+'</div><div class="hfill'+(Math.abs(x.final-mn)<0.005?" min":"")+'" style="height:'+ht+'px"></div><div class="hdate">'+esc(x.d.slice(5))+'</div></div>';
+      }).join("")+'</div></div>';
+  }
+  const tgt=it.targetFinal!=null?'<div class="prow"><span class="k">Target</span><span class="v">'+money(it.targetFinal)+'</span></div>':"";
+  d.innerHTML=rows+tgt+hist;
+  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+fetch("items.json").then(r=>r.json()).then(j=>{ DATA=j; render(); })
+  .catch(()=>{ $("list").innerHTML='<div class="card"><div class="empty">Could not load items.</div></div>'; });
+</script>
+</body>
+</html>
