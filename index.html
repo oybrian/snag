@@ -7,13 +7,13 @@
 <style>
 :root{
   --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#8e8e93;
-  --green:#34c759; --red:#ff3b30; --blue:#007aff; --amber:#ff9500;
-  --seg:#e9e9ee; --press:#d1d1d6;
+  --green:#34c759; --red:#ff3b30; --blue:#007aff;
+  --seg:#e9e9ee;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
   background:var(--bg); color:var(--ink); padding:0 0 40px;}
-header{padding:28px 20px 8px; display:flex; align-items:center; justify-content:space-between;}
+header{padding:28px 20px 8px;}
 header h1{margin:0; font-size:34px; font-weight:800; letter-spacing:-.5px;}
 header p{margin:4px 0 0; color:var(--sub); font-size:14px;}
 main{padding:8px 16px;}
@@ -21,146 +21,148 @@ main{padding:8px 16px;}
   box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .card.tappable{cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
 .card.tappable:active{transform:scale(.985); opacity:.85;}
-.item-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
-.item-name{font-size:17px; font-weight:700;}
-.item-store{font-size:13px; color:var(--sub); margin-top:2px;}
-.final-price{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;}
-.final-price .cur{font-size:15px; font-weight:600; color:var(--sub);}
+.prod-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+.prod-name{font-size:17px; font-weight:700;}
+.best{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.best .cur{font-size:15px; font-weight:600; color:var(--sub);}
+.best-store{font-size:12px; color:var(--sub); text-align:right; margin-top:2px;}
 .badges{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
 .badge{font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px;}
 .badge.low{background:#e5f9ec; color:#1a7f37;}
 .badge.target{background:#e8f0fe; color:#1a56db;}
 .badge.drop{background:#fdecea; color:#c62828;}
 .badge.watch{background:var(--seg); color:var(--sub);}
-.trend{font-size:13px; color:var(--sub); margin-top:8px; font-variant-numeric:tabular-nums;}
-.trend .down{color:var(--green); font-weight:700;}
-.trend .up{color:var(--red); font-weight:700;}
 .detail{margin-top:12px; border-top:1px solid #f0f0f4; padding-top:10px; display:none;}
 .detail.open{display:block;}
-.prow{display:flex; justify-content:space-between; font-size:14px; padding:3px 0; font-variant-numeric:tabular-nums;}
-.prow .k{color:var(--sub);}
-.prow .v{font-weight:600;}
-.prow.total{border-top:1px solid #f0f0f4; margin-top:6px; padding-top:8px; font-size:15px;}
-.prow.total .v{font-weight:800;}
-.prow .neg{color:var(--green);}
-.hist{margin-top:10px;}
+.listing{padding:10px 0; border-bottom:1px solid #f5f5f8;}
+.listing:last-child{border-bottom:none;}
+.lrow{display:flex; justify-content:space-between; align-items:baseline;}
+.lstore{font-size:15px; font-weight:700;}
+.lprice{font-size:18px; font-weight:800; font-variant-numeric:tabular-nums;}
+.lprice.winner{color:var(--green);}
+.lsub{font-size:12px; color:var(--sub); margin-top:2px; font-variant-numeric:tabular-nums;}
+.lnote{font-size:12px; color:var(--blue); margin-top:4px;}
+.lbreak{margin-top:6px; font-size:13px; color:var(--sub);}
+.lbreak .prow{display:flex; justify-content:space-between; padding:2px 0; font-variant-numeric:tabular-nums;}
+.lbreak .neg{color:var(--green); font-weight:600;}
+.llink{font-size:13px; color:var(--blue); text-decoration:none; font-weight:600;}
+.hist{margin-top:8px;}
 .hist-title{font-size:12px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;}
-.hbar{display:flex; align-items:flex-end; gap:3px; height:56px; margin-top:4px;}
-.hcol{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+.hbar{display:flex; align-items:flex-end; gap:3px; height:56px;}
+.hcol{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0;}
 .hfill{width:100%; max-width:22px; background:var(--blue); border-radius:4px 4px 0 0; opacity:.85;}
 .hfill.min{background:var(--green);}
 .hdate{font-size:9px; color:var(--sub); margin-top:2px;}
 .hval{font-size:9px; color:var(--sub); font-variant-numeric:tabular-nums;}
-.item-link{display:inline-block; margin-top:10px; font-size:14px; color:var(--blue); text-decoration:none; font-weight:600;}
 .empty{text-align:center; color:var(--sub); padding:40px 20px; font-size:15px; line-height:1.6;}
 .empty b{color:var(--ink);}
 .foot{margin-top:16px; text-align:center; font-size:12px; color:var(--sub);}
 </style>
 </head>
 <body>
-<header>
-  <div><h1>Snag</h1><p>Final prices, tracked daily</p></div>
-</header>
+<header><h1>Snag</h1><p>True final price, every store</p></header>
 <main id="list"></main>
 <div class="foot" id="foot"></div>
 <script>
 const $=id=>document.getElementById(id);
 const money=n=>"$"+n.toFixed(2);
-let DATA={items:[],taxRate:0.08875,taxLabel:"NYC 8.875%",updated:""};
+let DATA={products:[],taxRate:0.08875,taxLabel:"NYC 8.875%",updated:""};
 
-/* ---------- final price: merge everything into one number ---------- */
-function finalPrice(it, base){
-  const br=[]; // breakdown rows [label, amount]
-  let p=base;
-  br.push(["Price",p]);
-  if(it.promo&&it.promo.value>0){
-    if(it.promo.type==="percent"){ const d=p*it.promo.value/100; p-=d; br.push(["Promo "+it.promo.code+" (−"+it.promo.value+"%)",-d]); }
-    else { p-=it.promo.value; br.push(["Promo "+it.promo.code,-it.promo.value]); }
+/* final price for one listing: merge everything into one number */
+function finalPrice(l, base){
+  let p=base; const rows=[["Price",p]];
+  if(l.promo&&l.promo.value>0){
+    if(l.promo.type==="percent"){ const d=p*l.promo.value/100; p-=d; rows.push(["Promo "+l.promo.code+" (−"+l.promo.value+"%)",-d]); }
+    else { p-=l.promo.value; rows.push(["Promo "+l.promo.code,-l.promo.value]); }
   }
-  const ship=it.shipping||0;
-  if(ship>0){ p+=ship; br.push(["Shipping",ship]); }
-  if(it.international){
-    if(p>800&&(it.dutyRate||0)>0){ const d=p*it.dutyRate; p+=d; br.push(["Duty ("+Math.round(it.dutyRate*100)+"%)",d]); }
+  const ship=l.shipping||0;
+  if(ship>0){ p+=ship; rows.push(["Shipping",ship]); }
+  if(l.international){
+    if(p>800&&(l.dutyRate||0)>0){ const d=p*l.dutyRate; p+=d; rows.push(["Duty ("+Math.round(l.dutyRate*100)+"%)",d]); }
   }else{
-    const t=p*DATA.taxRate; p+=t; br.push(["Tax ("+DATA.taxLabel+")",t]);
+    const t=p*DATA.taxRate; p+=t; rows.push(["Tax ("+DATA.taxLabel+")",t]);
   }
-  if(it.cardOffer&&it.cardOffer.credit>0&&p>=(it.cardOffer.minSpend||0)){
-    p-=it.cardOffer.credit; br.push(["Card offer: "+it.cardOffer.label,-it.cardOffer.credit]);
+  if(l.cardOffer&&l.cardOffer.credit>0&&p>=(l.cardOffer.minSpend||0)){
+    p-=l.cardOffer.credit; rows.push(["Card: "+l.cardOffer.label,-l.cardOffer.credit]);
   }
-  p=Math.max(0,Math.round(p*100)/100);
-  return {total:p, rows:br};
+  return {total:Math.max(0,Math.round(p*100)/100), rows};
 }
-function histFinal(it){
-  return (it.history||[]).map(h=>({d:h.d, price:h.price, final:finalPrice(it,h.price).total}));
+function listingCur(l){
+  const h=l.history||[];
+  if(!h.length) return null;
+  const last=h[h.length-1];
+  return {d:last.d, price:last.price, fp:finalPrice(l,last.price)};
 }
 function render(){
   const box=$("list"); box.innerHTML="";
-  const items=DATA.items||[];
-  if(!items.length){
-    box.innerHTML='<div class="card"><div class="empty"><b>No items tracked yet.</b><br>Send me a product link and I\'ll add it here.</div></div>';
+  const prods=DATA.products||[];
+  if(!prods.length){
+    box.innerHTML='<div class="card"><div class="empty"><b>No products tracked yet.</b><br>Send me a product name and I\'ll track it across stores.</div></div>';
   }
-  for(const it of items){
-    const hist=histFinal(it);
-    const cur=hist.length?hist[hist.length-1]:null;
-    const curFinal=cur?cur.final:null;
-    const finals=hist.map(h=>h.final);
-    const low=finals.length?Math.min(...finals):null;
-    const isLow=curFinal!=null&&low!=null&&curFinal<=low+0.005&&finals.length>=2;
-    const targetHit=it.targetFinal!=null&&curFinal!=null&&curFinal<=it.targetFinal+0.005;
-    let drop=null;
-    if(hist.length>=2){
-      const prev=hist[hist.length-2].final;
-      drop=curFinal-prev;
-    }
+  for(const pr of prods){
+    const ls=(pr.listings||[]).map(l=>({l,cur:listingCur(l)})).filter(x=>x.cur);
+    ls.sort((a,b)=>a.cur.fp.total-b.cur.fp.total);
+    const best=ls[0];
     const card=document.createElement("div");
     card.className="card tappable";
+    // badges from best listing
     let badges="";
+    const allFinals=[];
+    for(const x of ls) for(const h of (x.l.history||[])) allFinals.push(finalPrice(x.l,h.price).total);
+    const low=allFinals.length?Math.min(...allFinals):null;
+    const isLow=best&&low!=null&&best.cur.fp.total<=low+0.005&&allFinals.length>=2;
+    const targetHit=pr.targetFinal!=null&&best&&best.cur.fp.total<=pr.targetFinal+0.005;
     if(targetHit) badges+='<span class="badge target">▼ Target hit</span>';
     if(isLow) badges+='<span class="badge low">★ Historic low</span>';
     if(!targetHit&&!isLow) badges+='<span class="badge watch">Watching</span>';
-    if(drop!=null&&drop<-0.005) badges+='<span class="badge drop">−'+money(-drop)+' today</span>';
-    let trend="";
-    if(hist.length>=2){
-      const first=hist[0].final;
-      const chg=curFinal-first, pct=first?chg/first*100:0;
-      const cls=chg<-0.005?"down":chg>0.005?"up":"";
-      trend='<div class="trend">Since tracking: <span class="'+cls+'">'+(chg<=0?"−":"+")+money(Math.abs(chg))+" ("+(chg<=0?"−":"+")+Math.abs(pct).toFixed(1)+"%)</span></div>";
-    }else if(hist.length===1){
-      trend='<div class="trend">First check — history builds daily.</div>';
+    // today's drop on best listing
+    const bh=best?best.l.history||[]:[];
+    if(bh.length>=2){
+      const prevF=finalPrice(best.l,bh[bh.length-2].price).total;
+      const d=best.cur.fp.total-prevF;
+      if(d<-0.005) badges+='<span class="badge drop">−'+money(-d)+' today</span>';
     }
     card.innerHTML=
-      '<div class="item-head"><div><div class="item-name">'+esc(it.name)+'</div>'+
-      '<div class="item-store">'+esc(it.store||"")+(it.international?" · ships from abroad":"")+'</div></div>'+
-      '<div class="final-price">'+(curFinal!=null?'<span class="cur">$</span>'+curFinal.toFixed(2):"—")+'</div></div>'+
-      '<div class="badges">'+badges+'</div>'+trend+
-      '<div class="detail" id="d-'+it.id+'"></div>'+
-      (it.url?'<a class="item-link" href="'+esc(it.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View product →</a>':"");
-    card.onclick=()=>toggleDetail(it,cur);
+      '<div class="prod-head"><div class="prod-name">'+esc(pr.name)+'</div>'+
+      (best?'<div><div class="best"><span class="cur">$</span>'+best.cur.fp.total.toFixed(2)+'</div>'+
+       '<div class="best-store">'+esc(best.l.store)+'</div></div>':"")+'</div>'+
+      '<div class="badges">'+badges+'</div>'+
+      '<div class="detail" id="d-'+pr.id+'"></div>';
+    card.onclick=()=>toggleDetail(pr,ls,best);
     box.appendChild(card);
   }
   $("foot").textContent=DATA.updated?("Prices checked "+DATA.updated):"";
 }
-function toggleDetail(it,cur){
-  const d=$("d-"+it.id);
+function toggleDetail(pr,ls,best){
+  const d=$("d-"+pr.id);
   const open=d.classList.toggle("open");
-  if(!open||!cur) return;
-  const fp=finalPrice(it,cur.price);
-  let rows=fp.rows.map(r=>'<div class="prow"><span class="k">'+esc(r[0])+'</span><span class="v'+(r[1]<0?" neg":"")+'">'+(r[1]<0?"−":"")+money(Math.abs(r[1]))+'</span></div>').join("");
-  rows+='<div class="prow total"><span class="k">Final price</span><span class="v">'+money(fp.total)+'</span></div>';
-  let hist="";
-  const h=histFinal(it);
-  if(h.length){
-    const mx=Math.max(...h.map(x=>x.final)), mn=Math.min(...h.map(x=>x.final));
-    const span=(mx-mn)||1;
-    hist='<div class="hist"><div class="hist-title">Price history</div><div class="hbar">'+
-      h.slice(-14).map(x=>{
-        const ht=18+Math.round((x.final-mn)/span*34);
-        return '<div class="hcol"><div class="hval">'+x.final.toFixed(0)+'</div><div class="hfill'+(Math.abs(x.final-mn)<0.005?" min":"")+'" style="height:'+ht+'px"></div><div class="hdate">'+esc(x.d.slice(5))+'</div></div>';
-      }).join("")+'</div></div>';
-  }
-  const tgt=it.targetFinal!=null?'<div class="prow"><span class="k">Target</span><span class="v">'+money(it.targetFinal)+'</span></div>':"";
-  d.innerHTML=rows+tgt+hist;
   try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+  if(!open) return;
+  let html="";
+  if(pr.targetFinal!=null) html+='<div class="lsub" style="margin-bottom:6px">Target: <b>'+money(pr.targetFinal)+'</b></div>';
+  for(const x of ls){
+    const isBest=best&&x.l.store===best.l.store;
+    const rows=x.cur.fp.rows.map(r=>'<div class="prow"><span>'+esc(r[0])+'</span><span class="'+(r[1]<0?"neg":"")+'">'+(r[1]<0?"−":"")+money(Math.abs(r[1]))+'</span></div>').join("");
+    let hist="";
+    const h=(x.l.history||[]).slice(-14);
+    if(h.length){
+      const fs=h.map(e=>finalPrice(x.l,e.price).total);
+      const mx=Math.max(...fs), mn=Math.min(...fs), sp=(mx-mn)||1;
+      hist='<div class="hist"><div class="hbar">'+h.map((e,i)=>{
+        const ht=18+Math.round((fs[i]-mn)/sp*34);
+        return '<div class="hcol"><div class="hval">'+fs[i].toFixed(0)+'</div><div class="hfill'+(Math.abs(fs[i]-mn)<0.005?" min":"")+'" style="height:'+ht+'px"></div><div class="hdate">'+esc(e.d.slice(5))+'</div></div>';
+      }).join("")+'</div></div>';
+    }
+    let notes="";
+    if(x.l.promo&&x.l.promo.value>0) notes+='<div class="lnote">🏷️ '+esc(x.l.promo.code)+'</div>';
+    if(x.l.cardOffer&&x.l.cardOffer.credit>0) notes+='<div class="lnote">💳 '+esc(x.l.cardOffer.label)+'</div>';
+    html+='<div class="listing"><div class="lrow"><span class="lstore">'+esc(x.l.store)+(isBest?' <span style="color:var(--green)">●</span>':"")+'</span>'+
+      '<span class="lprice'+(isBest?" winner":"")+'">'+money(x.cur.fp.total)+'</span></div>'+
+      '<div class="lsub">List '+money(x.cur.price)+' · checked '+esc(x.cur.d)+'</div>'+
+      '<div class="lbreak">'+rows+'</div>'+notes+hist+
+      (x.l.url?'<div style="margin-top:6px"><a class="llink" href="'+esc(x.l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">View →</a></div>':"")+'</div>';
+  }
+  d.innerHTML=html;
 }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 fetch("items.json").then(r=>r.json()).then(j=>{ DATA=j; render(); })
